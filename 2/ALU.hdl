@@ -2,6 +2,12 @@
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
 // File name: projects/2/ALU.hdl
+/*
+These six directives are to be performed in order: first, we either set
+the x and y inputs to 0, or not; next, we either negate the resulting values, or
+not; next, we compute either + or & on the preprocessed values; and finally,
+we either negate the resulting value, or not.
+*/
 /**
  * ALU (Arithmetic Logic Unit):
  * Computes out = one of the following functions:
