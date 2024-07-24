@@ -1,0 +1,21 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/2/Inc16.hdl
+/**
+ * 16-bit incrementer:
+ * out = in + 1
+ */
+CHIP Inc16 {
+    IN in[16];
+    OUT out[16];
+
+    PARTS:
+    /*
+    Not16(in=in, out=notin); //notin = -x-1
+    Add16(a =in, b =notin, out = neg1);//neg1 = -1
+    Add16(a =notin, b =neg1, out = tmp);//tmp = -x-2
+    Not16(in=tmp, out=out);
+    */
+    Add16(a =in, b[0]=true, out = out);
+}
