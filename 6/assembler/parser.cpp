@@ -80,6 +80,10 @@ std::string Parser::getcurInstr() const{
 	return curInstr;
 }
 
+char Parser::getcurChar() const{
+	return curChar;
+}
+
 int Parser::instructionType(){
 	//advance();
 	

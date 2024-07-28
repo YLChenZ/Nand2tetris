@@ -25,13 +25,14 @@ public:
 	Parser(const std::string& filename);
   	~Parser();
   	std::string getInstr();
+  	
 	void advance();
   	std::vector<std::string> getInstrVec();
   	void PrintSingleInstr();
   	void PrintInstrs();
   	
   	std::string getcurInstr() const;
-
+	char getcurChar() const;
 	bool hasMoreLines();
 
 
