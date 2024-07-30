@@ -1,24 +1,25 @@
 #include "code.h"
 #include <bitset>
 
-Code::Code(const std::string& fn) : filename(fn), parser(Parser(fn)) {}
+Code::Code(const std::string& fn,std::shared_ptr<SymbolTable> symtab) 
+	: filename(fn), parser(Parser(fn,symtab)), symtab(symtab) {}
 
 std::string Code::CodeDest(const std::string& dest){
 	if (dest == "None")
 		return "000";
-	if (dest == "M")
+	else if (dest == "M")
 		return "001";
-	if (dest == "D")
+	else if (dest == "D")
 		return "010";
-	if (dest == "DM")
+	else if (dest == "DM" || dest == "MD")
 		return "011";
-	if (dest == "A")
+	else if (dest == "A")
 		return "100";
-	if (dest == "AM")
+	else if (dest == "AM")
 		return "101";
-	if (dest == "AD")
+	else if (dest == "AD")
 		return "110";
-	if (dest == "ADM")
+	else if (dest == "ADM")
 		return "111";
 }
 	
@@ -28,47 +29,43 @@ std::string Code::CodeComp(const std::string& comp){
 	
 	if (comp == "0")
 		compRight = "101010";
-	if (comp == "1")
+	else if (comp == "1")
 		compRight = "111111";
-	if (comp == "-1")
+	else if (comp == "-1")
 		compRight = "111010";
-	if (comp == "D")
+	else if (comp == "D")
 		compRight = "001100";
-	if (comp == "A" || comp == "M")
+	else if (comp == "A" || comp == "M")
 		compRight = "110000";
-	if (comp == "!D")
+	else if (comp == "!D")
 		compRight = "001101";
-	if (comp == "!A" || comp == "!M")
+	else if (comp == "!A" || comp == "!M")
 		compRight = "110001";
-	if (comp == "-D")
-		compRight = "001101";
-	if (comp == "!A" || comp == "!M")
-		compRight = "110001";
-	if (comp == "-D")
+	else if (comp == "-D")
 		compRight = "001111";
-	if (comp == "-A" || comp == "-M")
+	else if (comp == "-A" || comp == "-M")
 		compRight = "110011";
-	if (comp == "D+1")
+	else if (comp == "D+1")
 		compRight = "011111";
-	if (comp == "A+1" || comp == "M+1")
+	else if (comp == "A+1" || comp == "M+1")
 		compRight = "110111";
-	if (comp == "D-1")
+	else if (comp == "D-1")
 		compRight = "001110";
-	if (comp == "A-1" || comp == "M-1")
+	else if (comp == "A-1" || comp == "M-1")
 		compRight = "110010";
-	if (comp == "D+A" || comp == "D+M")
+	else if (comp == "D+A" || comp == "D+M")
 		compRight = "000010";
-	if (comp == "D-A" || comp == "D-M")
+	else if (comp == "D-A" || comp == "D-M")
 		compRight = "010011";
-	if (comp == "A-D" || comp == "M-D")
+	else if (comp == "A-D" || comp == "M-D")
 		compRight = "110001";
-	if (comp == "D&A" || comp == "D&M")
+	else if (comp == "D&A" || comp == "D&M")
 		compRight = "000000";
-	if (comp == "D|A" || comp == "D|M")
+	else if (comp == "D|A" || comp == "D|M")
 		compRight = "010101";
-	if (parser.getcurInstr().find('M') != std::string::npos)
+	if (comp.find('M') != std::string::npos)
 		compLSB="1";
-	else if (parser.getcurInstr().find('A') != std::string::npos)
+	else if (comp.find('A') != std::string::npos)
 		compLSB="0";
 		
 	return compLSB + compRight;
@@ -77,53 +74,79 @@ std::string Code::CodeComp(const std::string& comp){
 std::string Code::CodeJump(const std::string& jump){
 	if (jump == "None")
 		return "000";
-	if (jump == "JGT")
+	else if (jump == "JGT")
 		return "001";
-	if (jump == "JEQ")
+	else if (jump == "JEQ")
 		return "010";
-	if (jump == "JGE")
+	else if (jump == "JGE")
 		return "011";
-	if (jump == "JLT")
+	else if (jump == "JLT")
 		return "100";
-	if (jump == "JNE")
+	else if (jump == "JNE")
 		return "101";
-	if (jump == "JLE")
+	else if (jump == "JLE")
 		return "110";
-	if (jump == "JMP")
+	else if (jump == "JMP")
 		return "111";
 }
 
 std::string Code::CodeCombi(){
 	auto DestBin = CodeDest(parser.dest());
+	//std::cout << DestBin <<'\n';
 	auto CompBin = CodeComp(parser.comp());
+	//std::cout << CompBin <<'\n';
 	auto JumpBin = CodeJump(parser.jump());
+	//std::cout << parser.jump();
+	//std::cout << parser.jump().size();
+	//std::cout << JumpBin <<'\n';
 	
-	return "111" + CompBin + DestBin + JumpBin;
+	std::string result = "111";
+	
+	result = result + CompBin + DestBin + JumpBin;
+	
+	return result;
 }
 
 std::string Code::CodeAInstr(){
 	auto symbol = parser.symbol();
-	int DNumber = std::stoi(symbol);
+	int DNumber;
+	if (parser.isNumber(symbol))
+		DNumber = std::stoi(symbol);
+	else 
+		DNumber = parser.getsymtab()->getSymTab()[symbol];
+		
 	std::bitset<15> BNumber(DNumber);
 	auto AddrBin = BNumber.to_string(); 
 	return "0" + AddrBin;
 }
 
-void Code::PrintSingleBinCode() {
+void Code::PrintSingleBinCode(const std::string& filename) {
+	std::ofstream outFile(filename,std::ios::app);
+    	if (!outFile.is_open()) {
+        	std::cerr << "Error opening file: " << filename << std::endl;
+        	return;
+    	}
+    	
 	int instType = parser.instructionType();
-	if (instType == -1 || instType == -3){
-		std::cout << CodeAInstr() << '\n';
+	if (instType == -1){
+		outFile << CodeAInstr() << '\n';
 	}
 	
 	if (instType == -2){
-		std::cout << CodeCombi() << '\n';
+		outFile << CodeCombi() << '\n';
 	}
 }
 
-void Code::PrintBinCode()
-{
-	while (parser.getcurChar() != EOF){
-		PrintSingleBinCode();
+void Code::PrintBinCode(const std::string& filename)
+{	
+	
+	while (parser.getcurChar()!=EOF){
+		PrintSingleBinCode(filename);
 		parser.advance();
 	}
 }
+
+//Parser Code::getParser(){
+////	return parser;
+//}
+

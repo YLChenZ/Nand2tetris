@@ -5,15 +5,31 @@ void Parser::nextChar() {
 }
 
 
-Parser::Parser(const std::string& filename) : curChar(' '), curInstr(" ") {
+Parser::Parser(const std::string& filename,int pf,std::shared_ptr<SymbolTable> symtab) 
+	: filename(filename), curChar(' '), curInstr(" "), linenum(-1), varaddr(15), passflag(pf), symtab(symtab)
+{
 	file.open(filename);
 	if (!file.is_open()) {
-		std::cerr << "Error opening file" << std::endl;
+		std::cerr << "Error opening file" << '\n';
 		exit(1);
 	}
 	nextChar();
 	advance();
 }
+
+Parser::Parser(const std::string& filename,std::shared_ptr<SymbolTable> symtab)
+	: filename(filename), curChar(' '), curInstr(" "), linenum(-1), varaddr(15), symtab(symtab)
+{
+	file.open(filename);
+	if (!file.is_open()) {
+		std::cerr << "Error opening file" << '\n';
+		exit(1);
+	}
+	nextChar();
+	advance();
+}
+
+
 
 Parser::~Parser() {
 	if (file.is_open()) {
@@ -53,11 +69,14 @@ std::string Parser::getInstr() {
 	
 	std::string Instr;
 	
-	while (curChar != '\n' && curChar != '\r' && curChar != EOF){
+	while (curChar != '\n' && curChar != '\r' && !isspace(curChar) && curChar != EOF){
 		//std::cout << curChar<<'\n';
 		Instr += curChar;
 		nextChar();
 	}
+	
+	if (Instr.find('(') == std::string::npos)
+		linenum ++;
 	
 	nextChar();
 	
@@ -84,6 +103,25 @@ char Parser::getcurChar() const{
 	return curChar;
 }
 
+int Parser::getlinenum() const{
+	return linenum;
+}
+
+std::shared_ptr<SymbolTable> Parser::getsymtab() {
+	return symtab;
+}
+
+bool Parser::isNumber(const std::string& str) {
+    try {
+        std::stoi(str);
+        return true;
+    } catch (const std::invalid_argument&) {
+        return false;
+    } catch (const std::out_of_range&) {
+        return false;
+    }
+}
+
 int Parser::instructionType(){
 	//advance();
 	
@@ -101,13 +139,38 @@ std::string Parser::symbol(){
 	int instType = instructionType();
 	std::string symbol;
 	
-	if (instType == -1){
+	if (passflag == 2 && instType == -1){
 		symbol = curInstr.substr(1);
+		if (!symtab->contains(symbol) && !isNumber(symbol)){
+			varaddr++;
+			symtab->addEntry(symbol,varaddr);
+			return symbol;
+		}
 	}
 	
-	if (instType == -3){
+	if (passflag == 1 && instType == -3){
 		symbol = curInstr.substr(1, curInstr.length() - 2);
+		if (!symtab->contains(symbol)){
+			symtab->addEntry(symbol,linenum+1);
+			return symbol;
+		}		
 	}
+	
+	if (passflag != 1 && passflag != 2 && instType == -1){
+		symbol = curInstr.substr(1);
+		if (!symtab->contains(symbol) && !isNumber(symbol)){
+			varaddr++;
+			symtab->addEntry(symbol,varaddr);
+		}
+	}
+	if (passflag != 1 && passflag != 2 && instType == -3){
+		symbol = curInstr.substr(1, curInstr.length() - 2);
+		if (!symtab->contains(symbol))
+			symtab->addEntry(symbol,linenum+1);
+	}
+	
+	//std::cout<< varaddr;
+	
 	return symbol;
 }
 
@@ -166,23 +229,45 @@ std::vector<std::string> Parser::getInstrVec()
 
 
       
-void Parser::PrintSingleInstr(){
+void Parser::PrintSingleInstr(const std::string& filename){
+	std::ofstream outFile(filename,std::ios::app);
+    	if (!outFile.is_open()) {
+        	std::cerr << "Error opening file: " << filename << std::endl;
+        	return;
+    	}
+    	
 	int instType = instructionType();
 	if (instType == -1 || instType == -3){
-	std::cout << curInstr << "   symbol: " << symbol() << '\n';
+	outFile << linenum << " : " << curInstr << curInstr.size() << "   symbol: " << symbol() << '\n';
 	}
 	
 	if (instructionType() == -2){
-	std::cout << curInstr << "  dest: " << dest() 
-			       << " comp: " << comp()
-			       << " jump: " << jump() <<'\n';
+	outFile << linenum << " : " << curInstr << curInstr.size() << "  dest: " << dest() 
+			      << " comp: " << comp()
+			      << " jump: " << jump() <<'\n';
 	}
+	outFile.close();
 }      
-void Parser::PrintInstrs()
+void Parser::PrintInstrs(const std::string& filename)
 {
 	while (curChar != EOF){
-		PrintSingleInstr();
+		PrintSingleInstr(filename);
 		advance();
 	}
+}
+
+void Parser::PrintSymTab(const std::string& filename)
+{
+    std::ofstream outFile(filename);
+    if (!outFile.is_open()) {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return;
+    }
+    
+    for (const auto& kv : symtab->getSymTab()){
+        outFile << "Key: " << kv.first << " Value: " << kv.second << '\n';
+    }
+
+    outFile.close();
 }
 

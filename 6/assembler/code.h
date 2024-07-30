@@ -7,8 +7,9 @@ class Code{
 private:
 	std::string filename;
 	Parser parser;
+	std::shared_ptr<SymbolTable> symtab;
 public:
-	Code(const std::string& fn);
+	Code(const std::string& fn,std::shared_ptr<SymbolTable> symtab);
 	
 	std::string CodeDest(const std::string& dest);
 	
@@ -20,9 +21,11 @@ public:
 	
 	std::string CodeAInstr();
 	
-	void PrintSingleBinCode();
+	void PrintSingleBinCode(const std::string& filename);
 	
-	void PrintBinCode();
+	void PrintBinCode(const std::string& filename);
+	
+	//Parser getParser();
 
 };
 
