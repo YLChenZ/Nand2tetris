@@ -2,7 +2,26 @@
 #include <bitset>
 
 Code::Code(const std::string& fn,std::shared_ptr<SymbolTable> symtab) 
-	: filename(fn), parser(Parser(fn,symtab)), symtab(symtab) {}
+	: filename(fn), parser(Parser(fn,symtab)), symtab(symtab) {
+	size_t commapos = filename.find('.');
+	std::string fnPrefix;
+	if (commapos!=std::string::npos)
+		fnPrefix = filename.substr(0,commapos+1);	
+	outfn = fnPrefix + "hack";
+	
+	outFile.open(outfn);
+    	if (!outFile.is_open()) {
+        	std::cerr << "Error opening file: " << outfn << '\n';
+        	exit(1);
+    	}
+}
+
+
+Code::~Code(){
+	if (outFile.is_open()) {
+		outFile.close();
+	}
+}
 
 std::string Code::CodeDest(const std::string& dest){
 	if (dest == "None")
@@ -21,6 +40,7 @@ std::string Code::CodeDest(const std::string& dest){
 		return "110";
 	else if (dest == "ADM")
 		return "111";
+	return "ERROR";
 }
 	
 std::string Code::CodeComp(const std::string& comp){
@@ -88,6 +108,7 @@ std::string Code::CodeJump(const std::string& jump){
 		return "110";
 	else if (jump == "JMP")
 		return "111";
+	return "ERROR";
 }
 
 std::string Code::CodeCombi(){
@@ -120,13 +141,7 @@ std::string Code::CodeAInstr(){
 	return "0" + AddrBin;
 }
 
-void Code::PrintSingleBinCode(const std::string& filename) {
-	std::ofstream outFile(filename,std::ios::app);
-    	if (!outFile.is_open()) {
-        	std::cerr << "Error opening file: " << filename << std::endl;
-        	return;
-    	}
-    	
+void Code::PrintSingleBinCode() {	
 	int instType = parser.instructionType();
 	if (instType == -1){
 		outFile << CodeAInstr() << '\n';
@@ -137,16 +152,12 @@ void Code::PrintSingleBinCode(const std::string& filename) {
 	}
 }
 
-void Code::PrintBinCode(const std::string& filename)
+void Code::PrintBinCode()
 {	
 	
 	while (parser.getcurChar()!=EOF){
-		PrintSingleBinCode(filename);
+		PrintSingleBinCode();
 		parser.advance();
 	}
 }
-
-//Parser Code::getParser(){
-////	return parser;
-//}
 

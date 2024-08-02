@@ -18,7 +18,11 @@ private:
     		INVALID_INSTRUCTION = 0
 	};
 	std::ifstream file;
+	std::ofstream outFilep;
+	std::ofstream outFiles;
 	std::string filename;
+	std::string passn;
+	std::string stn;
     	char curChar;
     	void nextChar();
     	std::string curInstr;
@@ -36,9 +40,9 @@ public:
   	
 	void advance();
   	std::vector<std::string> getInstrVec();
-  	void PrintSingleInstr(const std::string& filename);
-  	void PrintInstrs(const std::string& filename);
-  	void PrintSymTab(const std::string& filename);
+  	void PrintSingleInstr();
+  	void PrintInstrs();
+  	void PrintSymTab();
   	
   	std::string getcurInstr() const;
 	char getcurChar() const;

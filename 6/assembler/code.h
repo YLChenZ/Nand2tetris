@@ -6,10 +6,14 @@
 class Code{
 private:
 	std::string filename;
+	std::string outfn;
+	std::ofstream outFile;
 	Parser parser;
 	std::shared_ptr<SymbolTable> symtab;
 public:
 	Code(const std::string& fn,std::shared_ptr<SymbolTable> symtab);
+	
+	~Code();
 	
 	std::string CodeDest(const std::string& dest);
 	
@@ -21,11 +25,10 @@ public:
 	
 	std::string CodeAInstr();
 	
-	void PrintSingleBinCode(const std::string& filename);
+	void PrintSingleBinCode();
 	
-	void PrintBinCode(const std::string& filename);
+	void PrintBinCode();
 	
-	//Parser getParser();
 
 };
 

@@ -15,6 +15,25 @@ Parser::Parser(const std::string& filename,int pf,std::shared_ptr<SymbolTable> s
 	}
 	nextChar();
 	advance();
+	
+	size_t commapos = filename.find('.');
+	std::string fnPrefix;
+	if (commapos!=std::string::npos)
+		fnPrefix = filename.substr(0,commapos+1);	
+	passn = fnPrefix + "pass" + std::to_string(pf);
+	stn = fnPrefix + "smtb";
+	
+	outFilep.open(passn);
+    	if (!outFilep.is_open()) {
+        	std::cerr << "Error opening file: " << passn << '\n';
+        	exit(1);
+    	}
+    	
+    	outFiles.open(stn);
+    	if (!outFiles.is_open()) {
+        	std::cerr << "Error opening file: " << stn << '\n';
+        	exit(1);
+    	}
 }
 
 Parser::Parser(const std::string& filename,std::shared_ptr<SymbolTable> symtab)
@@ -34,6 +53,14 @@ Parser::Parser(const std::string& filename,std::shared_ptr<SymbolTable> symtab)
 Parser::~Parser() {
 	if (file.is_open()) {
 		file.close();
+	}
+	
+	if (outFilep.is_open()) {
+		outFilep.close();
+	}
+	
+	if (outFiles.is_open()) {
+		outFiles.close();
 	}
 }
 
@@ -229,45 +256,32 @@ std::vector<std::string> Parser::getInstrVec()
 
 
       
-void Parser::PrintSingleInstr(const std::string& filename){
-	std::ofstream outFile(filename,std::ios::app);
-    	if (!outFile.is_open()) {
-        	std::cerr << "Error opening file: " << filename << std::endl;
-        	return;
-    	}
-    	
+void Parser::PrintSingleInstr(){
+
 	int instType = instructionType();
 	if (instType == -1 || instType == -3){
-	outFile << linenum << " : " << curInstr << curInstr.size() << "   symbol: " << symbol() << '\n';
+	outFilep << linenum << " : " << curInstr << curInstr.size() << "   symbol: " << symbol() << '\n';
 	}
 	
 	if (instructionType() == -2){
-	outFile << linenum << " : " << curInstr << curInstr.size() << "  dest: " << dest() 
+	outFilep << linenum << " : " << curInstr << curInstr.size() << "  dest: " << dest() 
 			      << " comp: " << comp()
 			      << " jump: " << jump() <<'\n';
 	}
-	outFile.close();
 }      
-void Parser::PrintInstrs(const std::string& filename)
+void Parser::PrintInstrs()
 {
 	while (curChar != EOF){
-		PrintSingleInstr(filename);
+		PrintSingleInstr();
 		advance();
 	}
 }
 
-void Parser::PrintSymTab(const std::string& filename)
-{
-    std::ofstream outFile(filename);
-    if (!outFile.is_open()) {
-        std::cerr << "Error opening file: " << filename << std::endl;
-        return;
-    }
-    
+void Parser::PrintSymTab()
+{  
     for (const auto& kv : symtab->getSymTab()){
-        outFile << "Key: " << kv.first << " Value: " << kv.second << '\n';
+        outFiles << "Key: " << kv.first << " Value: " << kv.second << '\n';
     }
 
-    outFile.close();
 }
 

@@ -1,0 +1,16 @@
+0 : @02   symbol: 
+1 : D=M3  dest: D comp: M jump: None
+2 : @12   symbol: 
+3 : D=D-M5  dest: D comp: D-M jump: None
+4 : @103   symbol: 
+5 : D;JGT5  dest: None comp: D jump: JGT
+6 : @12   symbol: 
+7 : D=M3  dest: D comp: M jump: None
+8 : @123   symbol: 
+9 : 0;JMP5  dest: None comp: 0 jump: JMP
+10 : @02   symbol: 
+11 : D=M3  dest: D comp: M jump: None
+12 : @22   symbol: 
+13 : M=D3  dest: M comp: D jump: None
+14 : @143   symbol: 
+15 : 0;JMP5  dest: None comp: 0 jump: JMP
