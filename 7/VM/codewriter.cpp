@@ -9,6 +9,20 @@ CodeWriter::CodeWriter(const std::string& filename)
 		std::cerr << "Error opening file" << '\n';
 		exit(1);
 	}
+	
+	size_t commapos = filename.find('.');
+	std::string fnprefix;
+	if (commapos != std::string::npos)
+		fnprefix = filename.substr(0,commapos);
+	outfn = fnprefix + ".asm";
+	
+	outFile.open(outfn);
+    	if (!outFile.is_open()) {
+        	std::cerr << "Error opening file: " << outfn << '\n';
+        	exit(1);
+    	}
+    	
+    	
 }
 
 
@@ -17,6 +31,12 @@ CodeWriter::~CodeWriter() {
 	if (file.is_open()) {
 		file.close();
 	}
+	
+	if (outFile.is_open()) {
+		outFile.close();
+	}
+	
+	
 }
 
 
@@ -29,43 +49,82 @@ std::map<std::string,char> AL1OPMap = { {"neg",'-'}, {"not",'!'}};
 std::map<std::string,std::string> CompMap = { {"eq","EQ"}, {"gt","GT"}, {"lt","LT"}};
 
 
+void CodeWriter::D2SP(){
+	outFile << "@SP" << '\n'
+		<<"A=M"<<'\n'
+		<<"M=D"<<'\n'
+		<< "@SP" << '\n' 
+		<<"M=M+1"<<'\n';
+}
 
+void CodeWriter::SP2D(){
+	outFile <<"@SP"<<'\n'
+		<<"M=M-1"<<'\n'
+		<<"A=M"<<'\n'
+		<<"D=M"<<'\n';
+}
 void CodeWriter::writeArithmetic(const std::string& command){
+	
 	switch (Cmd2Int[command]){
-	case 1: case 2: case 7: case 8:
-		std::cout<< "@SP" << '\n' 
-				<<"A=M"<<'\n'
-				<<"D=M"<<'\n'
-				<< "@SP" << '\n' 
-				<<"M=M-1"<<'\n' 
-				<<"A=M"<<'\n'
-				<<"D=M"<<AL2OPMap[command]<<"D"<<'\n'
-				<< "@SP" << '\n' 
+	case 1: case 7: case 8:
+		outFile << "//"<<command<<'\n';
+		SP2D();
+				/*<<"@SP"<<'\n'//rep2
 				<<"M=M-1"<<'\n'
 				<<"A=M"<<'\n'
-				<<"M=D"<<'\n'
-				<< "@SP" << '\n' 
-				<<"M=M+1"<<'\n';
-				
-		break;
-	
-	case 3: case 9:
-		std::cout<< "@SP" << '\n' 
-				<<"A=M"<<'\n'
-				<<"D="<<AL1OPMap[command]<<"M"<<'\n'
-				<< "@SP" << '\n' 
+				<<"D=M"<<'\n'*/
+		outFile <<"@SP"<<'\n' 
 				<<"M=M-1"<<'\n' 
 				<<"A=M"<<'\n'
+				<<"D=D"<<AL2OPMap[command]<<"M"<<'\n';
+		D2SP();
+				/*<< "@SP" << '\n' //rep1 
+				<<"A=M"<<'\n'
 				<<"M=D"<<'\n'
 				<< "@SP" << '\n' 
-				<<"M=M+1"<<'\n';
+				<<"M=M+1"<<'\n';*/
+				
+		break;
+	case 2: 
+		outFile << "//"<<command<<'\n';
+		SP2D();
+				/*<<"@SP"<<'\n'//rep2
+				<<"M=M-1"<<'\n'
+				<<"A=M"<<'\n'
+				<<"D=M"<<'\n'*/
+		outFile <<"@SP"<<'\n' 
+				<<"M=M-1"<<'\n' 
+				<<"A=M"<<'\n'
+				<<"D=M-D"<<'\n';
+		D2SP();		
+				/*<< "@SP" << '\n' //rep1 
+				<<"A=M"<<'\n'
+				<<"M=D"<<'\n'
+				<< "@SP" << '\n' 
+				<<"M=M+1"<<'\n';*/
+			break;
+	case 3: case 9:
+		outFile << "//"<<command<<'\n'
+				<< "@SP" << '\n'
+				<<"M=M-1"<<'\n'
+				<<"A=M"<<'\n'
+				<<"D="<<AL1OPMap[command]<<"M"<<'\n';
+		D2SP();
+				/*<< "@SP" << '\n' //rep1 
+				<<"A=M"<<'\n'
+				<<"M=D"<<'\n'
+				<< "@SP" << '\n' 
+				<<"M=M+1"<<'\n';*/
 		break;
 	
-	case 4: case 5: case 6:
-		std::cout<< "@SP" << '\n' 
+	case 4: case 5: case 6: //!!!
+		outFile << "//"<<command<<'\n';
+		SP2D();
+				/*<< "@SP" << '\n' //rep2
+				<<"M=M-1"<<'\n'
 				<<"A=M"<<'\n'
-				<<"D=M"<<'\n'
-				<< "@SP" << '\n' 
+				<<"D=M"<<'\n'*/
+		outFile << "@SP" << '\n' 
 				<<"M=M-1"<<'\n' 
 				<<"A=M"<<'\n'
 				<<"D=M-D"<<'\n'
@@ -73,16 +132,16 @@ void CodeWriter::writeArithmetic(const std::string& command){
 				<<"D;J"<<CompMap[command]<<'\n'
 				<<"D=0"<<'\n'
 				<<"("<<CompMap[command]<<")"<<'\n'
-				<<"D=-1"<<'\n'
-				<< "@SP" << '\n'
-				<<"M=M-1"<<'\n'
+				<<"D=-1"<<'\n';
+		D2SP();
+				/*<< "@SP" << '\n' //rep1 
 				<<"A=M"<<'\n'
 				<<"M=D"<<'\n'
-				<< "@SP" << '\n'
-				<<"M=M+1"<<'\n';
+				<< "@SP" << '\n' 
+				<<"M=M+1"<<'\n';*/
 		break;
 	default:
-		std::cout<<"Bad translation in AL!"<<'\n';
+		outFile<<"Bad translation in AL!"<<'\n';
 	
 	}
 }
@@ -93,138 +152,152 @@ std::map<std::string,std::string> SegMap = {{"local","LCL"}, {"argument","ARG"},
 std::map<std::string,int> Seg2Int = {{"argument",1},{"local",2},{"static",3},{"constant",4}, {"this",5}, {"that",6},{"pointer",7},{"temp",8} };
 
 void CodeWriter::writePushPop(int ct, const std::string& segment, int index){
+	size_t commapos = filename.find('.');
+	std::string fnprefix;
+	if (commapos != std::string::npos)
+		fnprefix = filename.substr(0,commapos+1);
+		
 	if (ct == C_PUSH){
 		switch (Seg2Int[segment]){
-		case 4:
-			std::cout << "//push constant "<<index<<'\n'
-					<<"@"<<index<<'\n'
-					<<"D=A"<<'\n'
-					<< "@SP" << '\n'
-					<<"A=M"<<'\n'
-					<<"M=D"<<'\n'
-					<< "@SP" << '\n' 
-					<<"M=M+1"<<'\n';
-			break;
-		case 2: case 1: case 5: case 6:
-			std::cout << "//push "<<segment<<" "<<index<<'\n'
-					<<"@"<<index<<'\n'
-					<<"D=A"<<'\n'
+		case 1: case 2: case 5: case 6:
+			outFile << "//push "<<segment<<" "<<index<<'\n'
 					<<"@"<<SegMap[segment]<<'\n'
-					<<"A=M+D"<<'\n'
 					<<"D=M"<<'\n'
-					<< "@SP" << '\n' 
+					<<"@"<<index<<'\n'
+					<<"A=D+A"<<'\n'
+					<<"D=M"<<'\n';
+			D2SP();
+					/*<< "@SP" << '\n' //rep1 
 					<<"A=M"<<'\n'
 					<<"M=D"<<'\n'
-					<<"@SP"<< '\n' 
-					<<"M=M+1"<<'\n';
+					<< "@SP" << '\n' 
+					<<"M=M+1"<<'\n';*/
+			break;
+		case 3:
+			outFile << "//push static "<<index<<'\n'
+					<<"@"<<fnprefix<<index<<'\n'
+					<<"D=M"<<'\n';
+			D2SP();
+					/*<< "@SP" << '\n' //rep1 
+					<<"A=M"<<'\n'
+					<<"M=D"<<'\n'
+					<< "@SP" << '\n' 
+					<<"M=M+1"<<'\n';*/
+			break;
+		case 4:
+			outFile << "//push constant "<<index<<'\n'
+					<<"@"<<index<<'\n'
+					<<"D=A"<<'\n';
+			D2SP();
+					/*<< "@SP" << '\n' //rep1 
+					<<"A=M"<<'\n'
+					<<"M=D"<<'\n'
+					<< "@SP" << '\n' 
+					<<"M=M+1"<<'\n';*/
 			break;
 		case 7:
-			if (index==0)
-				std::cout << "//push pointer "<<index<<'\n'
+			if (index==0) {
+				outFile << "//push pointer "<<index<<'\n'
 					<<"@THIS"<<'\n'
-					<< "A=M"<<'\n'
-					<<"D=M"<<'\n'
-					<< "@SP" << '\n' 
+					<<"D=M"<<'\n';
+				D2SP();
+					/*<< "@SP" << '\n' //rep1 
 					<<"A=M"<<'\n'
 					<<"M=D"<<'\n'
 					<< "@SP" << '\n' 
-					<<"M=M+1"<<'\n';
-			else if (index==1)
-				std::cout <<"@THAT"<<'\n'
-					<< "A=M"<<'\n'
-					<<"D=M"<<'\n'
-					<< "@SP" << '\n' 
+					<<"M=M+1"<<'\n';*/
+			}
+			else if (index==1){
+				outFile << "//push pointer "<<index<<'\n'
+					<<"@THAT"<<'\n'
+					<<"D=M"<<'\n';
+				D2SP();
+					/*<< "@SP" << '\n' //rep1 
 					<<"A=M"<<'\n'
 					<<"M=D"<<'\n'
 					<< "@SP" << '\n' 
-					<<"M=M+1"<<'\n';
-			break;
+					<<"M=M+1"<<'\n';*/
+			}
 		case 8:
-			std::cout << "//push temp "<<index<<'\n'
-					<<"@R"<<5 + index<<'\n'
-					<< "A=M"<<'\n'
-					<<"D=M"<<'\n' 
-					<< "@SP" << '\n' 
+			outFile << "//push temp "<<index<<'\n'
+					<<"@"<<5 + index<<'\n'
+					<<"D=M"<<'\n';
+			D2SP();
+					/*<< "@SP" << '\n' //rep1 
 					<<"A=M"<<'\n'
 					<<"M=D"<<'\n'
 					<< "@SP" << '\n' 
-					<<"M=M+1"<<'\n';
+					<<"M=M+1"<<'\n';*/
 			break;
-		case 3:  //wrong!!!
-			std::cout << "//push static "<<index<<'\n'
-					<<"@"<<16 + index<<'\n'
-					<< "A=M"<<'\n'
-					<<"D=M"<<'\n' 
-					<< "@SP" << '\n' 
-					<<"A=M"<<'\n'
-					<<"M=D"<<'\n'
-					<< "@SP" << '\n' 
-					<<"M=M+1"<<'\n';
-			break;
+		
 		default:
-			std::cout<<"Bad translation!"<<'\n';
+			outFile<<"Bad translation!"<<'\n';
 		}
 	}	
 	if (ct == C_POP){
 		switch (Seg2Int[segment]){
-		case 2: case 1: case 5: case 6:
-			std::cout  << "//pop "<<SegMap[segment]<<" "<<index<<'\n'
-					<<"@SP"<<'\n'
-					<<"A=M"<<'\n'
-					<<"D=M"<<'\n'
-					<<"@SP"<< '\n' 
-					<<"M=M-1"<<'\n'
-					<<"@"<<index<<'\n'
-					<<"D=A"<<'\n'
+		case 1: case 2: case 5: case 6:
+			outFile << "//pop "<<segment<<" "<<index<<'\n'
 					<<"@"<<SegMap[segment]<<'\n'
-					<<"A=M+D"<<'\n' 
+					<<"D=M"<<'\n'
+					<<"@"<<index<<'\n'
+					<<"D=D+A"<<'\n'
+					<<"@R13"<<'\n'
+					<<"M=D"<<'\n';
+			SP2D();
+					/*<< "@SP" << '\n' //rep2
+					<<"M=M-1"<<'\n'
+					<<"A=M"<<'\n'
+					<<"D=M"<<'\n'*/
+			outFile	<<"@R13"<<'\n'
+					<<"A=M"<<'\n'
+					<<"M=D"<<'\n';			
+			break;
+		case 3:
+			outFile  << "//pop static "<<index<<'\n';
+			SP2D();
+					/*<< "@SP" << '\n' //rep2
+					<<"M=M-1"<<'\n'
+					<<"A=M"<<'\n'
+					<<"D=M"<<'\n'*/
+			outFile	<<"@"<<fnprefix<<index<<'\n'
 					<<"M=D"<<'\n';
 			break;
 		case 7:
-			if (index==0)
-				std::cout << "//pop pointer "<<index<<'\n'
-					<<"@SP"<<'\n'
-					<<"A=M"<<'\n'
-					<<"D=M"<<'\n'
-					<<"@SP"<< '\n' 
+			if (index==0){
+				outFile << "//pop pointer "<<index<<'\n';
+				SP2D();
+					/*<< "@SP" << '\n' //rep2
 					<<"M=M-1"<<'\n'
-					<<"@THIS"<<'\n'
 					<<"A=M"<<'\n'
-					<<"M=D"<<'\n';
-			else if (index==1)
-				std::cout  <<"@SP"<<'\n'
-					<<"A=M"<<'\n'
-					<<"D=M"<<'\n'
-					<<"@SP"<< '\n' 
+					<<"D=M"<<'\n'*/
+				outFile <<"@THIS"<<'\n'
+					  <<"M=D"<<'\n';
+			}
+			else if (index==1){
+				outFile  << "//pop pointer "<<index<<'\n';
+				SP2D();
+					/*<< "@SP" << '\n' //rep2
 					<<"M=M-1"<<'\n'
-					<<"@THAT"<<'\n'
 					<<"A=M"<<'\n'
-					<<"M=D"<<'\n';
+					<<"D=M"<<'\n'*/ 
+				outFile <<"@THAT"<<'\n'
+					 <<"M=D"<<'\n';
+			}
 			break;
 		case 8:
-			std::cout  << "//pop temp "<<index<<'\n'
-					<<"@SP"<<'\n'
-					<<"A=M"<<'\n'
-					<<"D=M"<<'\n'
-					<<"@SP"<< '\n' 
+			outFile  << "//pop temp "<<index<<'\n';
+			SP2D();
+					/*<< "@SP" << '\n' //rep2
 					<<"M=M-1"<<'\n'
-					<<"@R"<<5+index<<'\n'
 					<<"A=M"<<'\n'
+					<<"D=M"<<'\n'*/
+			outFile	<<"@"<<5+index<<'\n'
 					<<"M=D"<<'\n';
 			break;
-		case 3:  //wrong!!!
-			std::cout  << "//pop static "<<index<<'\n'
-					<<"@SP"<<'\n'
-					<<"A=M"<<'\n'
-					<<"D=M"<<'\n'
-					<<"@SP"<< '\n' 
-					<<"M=M-1"<<'\n'
-					<<"@R"<<16 + index<<'\n'//???
-					<<"A=M"<<'\n'
-					<<"M=D"<<'\n';
-			break;
+		
 		default:
-			std::cout<<"Bad translation in PUSH or POP!"<<'\n';
+			outFile<<"Bad translation in PUSH or POP!"<<'\n';
 		}
 	}
 }

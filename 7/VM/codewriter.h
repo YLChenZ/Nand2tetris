@@ -18,13 +18,17 @@ private:
     		C_INVALID = 0
 	};
 	std::ifstream file;
+	std::ofstream outFile;
 	std::string filename;
-	//std::string outfn;
+	std::string outfn;
 	Parser parser;
 public:
 	CodeWriter(const std::string& filename);
 	
 	~CodeWriter();
+	
+	void D2SP();
+	void SP2D();
 
 	void writeArithmetic(const std::string& command);
 	
