@@ -11,7 +11,7 @@ M=M+1
 M=M-1
 A=M
 D=M
-@THIS
+@3
 M=D
 //push constant 3040
 @3040
@@ -26,7 +26,7 @@ M=M+1
 M=M-1
 A=M
 D=M
-@THAT
+@4
 M=D
 //push constant 32
 @32
@@ -73,15 +73,7 @@ D=M
 A=M
 M=D
 //push pointer 0
-@THIS
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
-//push temp 0
-@5
+@3
 D=M
 @SP
 A=M
@@ -89,15 +81,7 @@ M=D
 @SP
 M=M+1
 //push pointer 1
-@THAT
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
-//push temp 1
-@6
+@4
 D=M
 @SP
 A=M

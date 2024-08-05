@@ -2,7 +2,7 @@
 #include <map>
 
 CodeWriter::CodeWriter(const std::string& filename)
-	: filename(filename), parser(Parser(filename))
+	: filename(filename), parser(Parser(filename)),compIndex(-1)
 {
 	file.open(filename);
 	if (!file.is_open()) {
@@ -117,7 +117,8 @@ void CodeWriter::writeArithmetic(const std::string& command){
 				<<"M=M+1"<<'\n';*/
 		break;
 	
-	case 4: case 5: case 6: //!!!
+	case 4: case 5: case 6:
+		compIndex++;
 		outFile << "//"<<command<<'\n';
 		SP2D();
 				/*<< "@SP" << '\n' //rep2
@@ -128,17 +129,21 @@ void CodeWriter::writeArithmetic(const std::string& command){
 				<<"M=M-1"<<'\n' 
 				<<"A=M"<<'\n'
 				<<"D=M-D"<<'\n'
-				<<"@"<<CompMap[command]<<'\n'
+				<<"@"<<CompMap[command]<<"_"<<compIndex<<'\n'
 				<<"D;J"<<CompMap[command]<<'\n'
-				<<"D=0"<<'\n'
-				<<"("<<CompMap[command]<<")"<<'\n'
-				<<"D=-1"<<'\n';
-		D2SP();
-				/*<< "@SP" << '\n' //rep1 
+				<<"@SP"<<'\n'
 				<<"A=M"<<'\n'
-				<<"M=D"<<'\n'
-				<< "@SP" << '\n' 
-				<<"M=M+1"<<'\n';*/
+				<<"M=0"<<'\n'
+				<<"@"<<CompMap[command]<<"_CONTINUE"<<compIndex<<'\n'
+				<<"0;JMP"<<'\n'
+				<<"("<<CompMap[command]<<"_"<<compIndex<<")"<<'\n'
+				<<"@SP"<<'\n'
+				<<"A=M"<<'\n'
+				<<"M=-1"<<'\n'
+				<<"("<<CompMap[command]<<"_CONTINUE"<<compIndex<<")"<<'\n'
+				<<"@SP"<<'\n'
+				<<"M=M+1"<<'\n';
+		
 		break;
 	default:
 		outFile<<"Bad translation in AL!"<<'\n';
@@ -196,28 +201,16 @@ void CodeWriter::writePushPop(int ct, const std::string& segment, int index){
 					<<"M=M+1"<<'\n';*/
 			break;
 		case 7:
-			if (index==0) {
-				outFile << "//push pointer "<<index<<'\n'
-					<<"@THIS"<<'\n'
-					<<"D=M"<<'\n';
-				D2SP();
-					/*<< "@SP" << '\n' //rep1 
-					<<"A=M"<<'\n'
-					<<"M=D"<<'\n'
-					<< "@SP" << '\n' 
-					<<"M=M+1"<<'\n';*/
-			}
-			else if (index==1){
-				outFile << "//push pointer "<<index<<'\n'
-					<<"@THAT"<<'\n'
-					<<"D=M"<<'\n';
-				D2SP();
-					/*<< "@SP" << '\n' //rep1 
-					<<"A=M"<<'\n'
-					<<"M=D"<<'\n'
-					<< "@SP" << '\n' 
-					<<"M=M+1"<<'\n';*/
-			}
+			outFile << "//push pointer "<<index<<'\n'
+				<<"@"<<3 + index<<'\n'
+				<<"D=M"<<'\n';
+			D2SP();
+				/*<< "@SP" << '\n' //rep1 
+				<<"A=M"<<'\n'
+				<<"M=D"<<'\n'
+				<< "@SP" << '\n' 
+				<<"M=M+1"<<'\n';*/
+			break;
 		case 8:
 			outFile << "//push temp "<<index<<'\n'
 					<<"@"<<5 + index<<'\n'
@@ -264,26 +257,14 @@ void CodeWriter::writePushPop(int ct, const std::string& segment, int index){
 					<<"M=D"<<'\n';
 			break;
 		case 7:
-			if (index==0){
-				outFile << "//pop pointer "<<index<<'\n';
-				SP2D();
-					/*<< "@SP" << '\n' //rep2
-					<<"M=M-1"<<'\n'
-					<<"A=M"<<'\n'
-					<<"D=M"<<'\n'*/
-				outFile <<"@THIS"<<'\n'
-					  <<"M=D"<<'\n';
-			}
-			else if (index==1){
-				outFile  << "//pop pointer "<<index<<'\n';
-				SP2D();
-					/*<< "@SP" << '\n' //rep2
-					<<"M=M-1"<<'\n'
-					<<"A=M"<<'\n'
-					<<"D=M"<<'\n'*/ 
-				outFile <<"@THAT"<<'\n'
-					 <<"M=D"<<'\n';
-			}
+			outFile  << "//pop pointer "<<index<<'\n';
+			SP2D();
+				/*<< "@SP" << '\n' //rep2
+				<<"M=M-1"<<'\n'
+				<<"A=M"<<'\n'
+				<<"D=M"<<'\n'*/ 
+			outFile <<"@"<<3+index<<'\n'
+				<<"M=D"<<'\n';
 			break;
 		case 8:
 			outFile  << "//pop temp "<<index<<'\n';

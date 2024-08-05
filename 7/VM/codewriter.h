@@ -21,6 +21,8 @@ private:
 	std::ofstream outFile;
 	std::string filename;
 	std::string outfn;
+	
+	int compIndex;
 	Parser parser;
 public:
 	CodeWriter(const std::string& filename);
