@@ -2,6 +2,7 @@
 #define VM_CODE_WRITER_H
 
 #include "parser.h"
+#include <filesystem>
 
 class CodeWriter{
 private:
@@ -18,14 +19,19 @@ private:
     		C_INVALID = 0
 	};
 	std::ifstream file;
-	std::ofstream outFile;
+	std::ofstream& outFile;
 	std::string filename;
-	std::string outfn;
+	
+	//std::filesystem::path dirPath;
+	//std::string outfn;
 	std::string curFunName;
+	int compIndex;
 	int callIndex;
 	Parser parser;
 public:
-	CodeWriter(const std::string& filename);
+	//CodeWriter(const std::string& filename);
+	
+	CodeWriter(const std::string& filename, std::ofstream& outFile);
 	
 	~CodeWriter();
 	

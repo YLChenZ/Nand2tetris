@@ -44,54 +44,64 @@ void Parser::skipComment() {
 
 
 std::string Parser::getCmd() {
-	while (isspace(curChar)) {
-       	nextChar();
-	}
-	
-        while (curChar == '/') {
-        	skipComment();
-        	while (isspace(curChar)) {
-            		nextChar();
-        	}
-    	}
-	
-	std::string Cmd;
-	
-	int spacecount = 0;
-	while (curChar != '\n' && curChar != '\r' && curChar != EOF){
-		//std::cout << curChar<<'\n';
-		if (isspace(curChar))
-			spacecount++;
-		if (curChar == '/'){
-			skipComment();
-			continue;
-		}
-		if (spacecount<3){
-			Cmd += curChar;
-			nextChar();
-		}
-		else break;
-		
-	}
-	
-	Cmd.erase(Cmd.find_last_not_of(" \t") + 1);
-	
-	linenum ++;
-	
-	nextChar();
-	
-	return Cmd;
+    std::string Cmd;
+
+    while (isspace(curChar) || curChar == '/') {
+        if (curChar == '/') {
+            skipComment();
+        } else {
+            nextChar();
+        }
+    }
+
+    int spacecount = 0;
+
+    while (curChar != '\n' && curChar != '\r' && curChar != EOF) {
+        if (curChar == '/') {
+            skipComment();
+            continue;
+        }
+        if (isspace(curChar)) {
+            spacecount++;
+        } else {
+            spacecount = 0;
+        }
+
+        if (spacecount < 3) {
+            Cmd += curChar;
+        }
+
+        nextChar();
+    }
+
+    Cmd.erase(Cmd.find_last_not_of(" \t") + 1);
+
+    linenum++;
+
+    
+    if (curChar == '\n' || curChar == '\r') {
+        nextChar();
+    }
+    
+    if (Cmd.empty() && curChar == EOF) {
+        Cmd = "EOF";
+    }
+    // 调试输出
+    std::cout << "Read command: \"" << Cmd << "\"" << std::endl;
+
+    return Cmd;
 }
 
 bool Parser::hasMoreLines(){
 	return curChar != EOF;
 }
 
-void Parser::advance(){
-	if (hasMoreLines()) {
-        	curCmd = getCmd();
-    	}
-	//std::cout <<curCmd<<'\n';
+void Parser::advance() {
+    if (hasMoreLines()) {
+        curCmd = getCmd();
+    } else {
+        curCmd.clear(); // Clear the current command when no more lines
+    }
 }
 
 
@@ -186,10 +196,8 @@ std::string Parser::arg1(){
 				return curCmd.substr(first_space+1);
 			break;
 		default:
-			return "None";
-			
+			return "None";		
 	}
-	
 }
 
 int Parser::arg2(){
@@ -215,11 +223,11 @@ void Parser::PrintCmds(const std::string& filename){
         	return;
     	}	
 	
-	while (curChar != EOF){
-		outFile << linenum << ": " << curCmd << " " 
-			<< "arg1: " << arg1() << " arg2: " << arg2() << '\n';
-		advance();
-	}
+	do {
+        outFile << linenum << ": " << curCmd << " "
+                << "arg1: " << arg1() << " arg2: " << arg2() << '\n';
+        advance();
+    	} while (hasMoreLines() || !curCmd.empty());
 	
 	outFile.close();
 }

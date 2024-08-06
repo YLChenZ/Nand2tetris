@@ -1,40 +1,19 @@
 #include "codewriter.h"
 #include <map>
 
-CodeWriter::CodeWriter(const std::string& filename)
-	: filename(filename), parser(Parser(filename)), curFunName(" "),callIndex(-1)
-{
-	file.open(filename);
-	if (!file.is_open()) {
-		std::cerr << "Error opening file" << '\n';
-		exit(1);
-	}
-	
-	size_t commapos = filename.find('.');
-	std::string fnprefix;
-	if (commapos != std::string::npos)
-		fnprefix = filename.substr(0,commapos);
-	outfn = fnprefix + ".asm";
-	
-	outFile.open(outfn);
-    	if (!outFile.is_open()) {
-        	std::cerr << "Error opening file: " << outfn << '\n';
-        	exit(1);
-    	}
 
+
+CodeWriter::CodeWriter(const std::string& filename, std::ofstream& outFile)
+    : filename(filename), parser(Parser(filename)), curFunName(" "), callIndex(-1), compIndex(-1), outFile(outFile) {
+    // File open check
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Error opening file: " << filename << '\n';
+        exit(1);
+    }
 }
 
-
-
-CodeWriter::~CodeWriter() {
-	if (file.is_open()) {
-		file.close();
-	}	
-	if (outFile.is_open()) {
-		outFile.close();
-	}
-
-}
+CodeWriter::~CodeWriter() {}
 
 
 std::map<std::string,char> AL2OPMap = { {"add",'+'}, {"sub",'-'}, {"and",'&'}, {"or",'|'} };
@@ -103,7 +82,8 @@ void CodeWriter::writeArithmetic(const std::string& command){
 		
 		break;
 	
-	case 4: case 5: case 6: //!!!
+	case 4: case 5: case 6: 
+		compIndex++;
 		outFile << "//"<<command<<'\n';
 		SP2D();
 		
@@ -111,17 +91,21 @@ void CodeWriter::writeArithmetic(const std::string& command){
 				<<"M=M-1"<<'\n' 
 				<<"A=M"<<'\n'
 				<<"D=M-D"<<'\n'
-				<<"@"<<CompMap[command]<<'\n'
+				<<"@"<<CompMap[command]<<"_"<<compIndex<<'\n'
 				<<"D;J"<<CompMap[command]<<'\n'
-				<<"D=0"<<'\n'
-				<<"("<<CompMap[command]<<")"<<'\n'
-				<<"D=-1"<<'\n';
-		D2SP();
-				/*<< "@SP" << '\n' //rep1 
-				<<"A=M"<<'\n'
-				<<"M=D"<<'\n'
-				<< "@SP" << '\n' 
-				<<"M=M+1"<<'\n';*/
+				<<"@SP"<<'\n'
+				<< "A=M"<<'\n'
+				<< "M=0"<<'\n'
+				<<"@"<<CompMap[command]<<"_CONTINUE"<<"_"<<compIndex<<'\n'
+				<<"0;JMP"<<'\n'
+				<<"("<<CompMap[command]<<"_"<<compIndex<<")"<<'\n'
+				<<"@SP"<<'\n'
+				<< "A=M"<<'\n'
+				<< "M=-1"<<'\n'
+				<<"("<<CompMap[command]<<"_CONTINUE"<<"_"<<compIndex<<")"<<'\n'
+				<<"@SP"<<'\n'
+				<< "M=M+1"<<'\n';
+		
 		break;
 	default:
 		outFile<<"Bad translation in AL!"<<'\n';
@@ -136,10 +120,13 @@ std::map<std::string,int> Seg2Int = {{"argument",1},{"local",2},{"static",3},{"c
 
 
 void CodeWriter::writePushPop(int ct, const std::string& segment, int index){
-	size_t commapos = filename.find('.');
-	std::string fnprefix;
-	if (commapos != std::string::npos)
-		fnprefix = filename.substr(0,commapos+1);
+	size_t lastSlash = filename.find_last_of("/");
+	
+	auto fullname = filename.substr(lastSlash+1);
+	
+	auto fnprefix = fullname.substr(0,fullname.size()-2);
+		
+	//std::cout<<filename<<'\n';
 		
 	if (ct == C_PUSH){
 		switch (Seg2Int[segment]){
@@ -168,19 +155,12 @@ void CodeWriter::writePushPop(int ct, const std::string& segment, int index){
 			
 			break;
 		case 7:
-			if (index==0) {
-				outFile << "//push pointer "<<index<<'\n'
-					<<"@THIS"<<'\n'
-					<<"D=M"<<'\n';
-				D2SP();
-				
-			}
-			else if (index==1){
-				outFile << "//push pointer "<<index<<'\n'
-					<<"@THAT"<<'\n'
-					<<"D=M"<<'\n';
-				D2SP();
-			}
+			outFile << "//push pointer "<<index<<'\n'
+				<<"@"<<3 + index<<'\n'
+				<<"D=M"<<'\n';
+			D2SP();
+			
+			break;
 		case 8:
 			outFile << "//push temp "<<index<<'\n'
 					<<"@"<<5 + index<<'\n'
@@ -217,20 +197,11 @@ void CodeWriter::writePushPop(int ct, const std::string& segment, int index){
 					<<"M=D"<<'\n';
 			break;
 		case 7:
-			if (index==0){
-				outFile << "//pop pointer "<<index<<'\n';
-				SP2D();
-				
-				outFile <<"@THIS"<<'\n'
-					  <<"M=D"<<'\n';
-			}
-			else if (index==1){
-				outFile  << "//pop pointer "<<index<<'\n';
-				SP2D();
-				 
-				outFile <<"@THAT"<<'\n'
-					 <<"M=D"<<'\n';
-			}
+			outFile  << "//pop pointer "<<index<<'\n';
+			SP2D();
+
+			outFile <<"@"<<3+index<<'\n'
+				<<"M=D"<<'\n';
 			break;
 		case 8:
 			outFile  << "//pop temp "<<index<<'\n';
@@ -255,7 +226,7 @@ void CodeWriter::writeLabel(const std::string& label){
 void CodeWriter::writeGoto(const std::string& label){
 	outFile	<<"//goto "<<curFunName+"$"+label<<'\n'
 			<<"@"<<curFunName+"$"+label<<'\n'
-			<<"0,JMP"<<'\n';
+			<<"0;JMP"<<'\n';
 }
 	
 void CodeWriter::writeIf(const std::string& label){
@@ -264,18 +235,25 @@ void CodeWriter::writeIf(const std::string& label){
 	SP2D();
 	
 	outFile	<<"@"<<curFunName+"$"+label<<'\n'
-			<<"D,JNE"<<'\n';
+			<<"D;JNE"<<'\n';
 }
 
-void CodeWriter::writeFunction(const std::string& funName,int nVars){  //Check!!!!!!!!!!!!!!!!!!!!!!!
+void CodeWriter::writeFunction(const std::string& funName,int nVars){ 
 	outFile << "//function "<<funName<<" "<<nVars<<'\n';
 	
 	curFunName = funName;
-	writeLabel(funName);
+	
+	outFile	<<"("<<funName<<")"<<'\n';
+			
 	for (int i=0;i<nVars;i++){
 		writePushPop(C_PUSH, "constant", 0);
 		writePushPop(C_POP, "local", i);
 	}
+	
+	outFile	<<"@"<<nVars<<'\n'
+			<<"D=A"<<'\n'
+			<<"@SP"<<'\n'
+			<<"M=D+M"<<'\n';
 }
 
 	
@@ -284,7 +262,7 @@ void CodeWriter::writeCall(const std::string& funName,int nArgs){
 
 	//push returnAddress
 	callIndex++;
-	outFile	<< "@" <<funName<<"$ret."<<callIndex<<'\n'
+	outFile	<< "@" <<curFunName<<"_"<<funName<<"$ret."<<callIndex<<'\n'
 			<< "D=A"<<'\n';
 	D2SP();
 	
@@ -312,10 +290,13 @@ void CodeWriter::writeCall(const std::string& funName,int nArgs){
 			<< "M=D"<<'\n';
 	
 	//goto f
-	writeGoto(funName);
+	outFile	<<"//goto "<<funName<<'\n'
+			<<"@"<<funName<<'\n'
+			<<"0;JMP"<<'\n';
 	
 	//(returnAddress)
-	writeLabel(funName+"$ret."+std::to_string(callIndex));
+	outFile	<< "//label "<<curFunName<<"_"<<funName<<"$ret."<<callIndex<<'\n'
+			<<"("<<curFunName<<"_"<<funName<<"$ret."<<callIndex<<")"<<'\n';
 }
 
 
@@ -344,7 +325,7 @@ void CodeWriter::writeReturn(){
 	
 	//SP = ARG+1
 	outFile	<< "@ARG" <<'\n'
-			<< "D=A+1"<<'\n'
+			<< "D=M+1"<<'\n'
 			<<"@SP"<<'\n'
 			<<"M=D"<<'\n';
 			
@@ -371,7 +352,7 @@ void CodeWriter::writeReturn(){
 			
 	//LCL = *(frame-4)
 	outFile	<< "@R14" <<'\n'
-			<< "AM=M-1"<<'\n'
+			<< "A=M-1"<<'\n'
 			<< "D=M" <<'\n'
 			<< "@LCL" <<'\n'
 			<< "M=D"<<'\n';
@@ -385,6 +366,10 @@ void CodeWriter::writeReturn(){
 
 
 
+
+
+
+
 void CodeWriter::SingleVm2Asm() {
     	
 	int C_Type = parser.commandType();
@@ -393,7 +378,7 @@ void CodeWriter::SingleVm2Asm() {
 	
 	switch (C_Type){
 	case -1:
-		writePushPop(C_Type,arg1,arg2);
+		writeArithmetic(arg1);
 		break;
 	case -2: case -3:
 		writePushPop(C_Type,arg1,arg2);
@@ -422,9 +407,11 @@ void CodeWriter::SingleVm2Asm() {
 
 }
 
+
+
 void CodeWriter::Vm2Asm(){
 		
-	while (parser.getcurChar() != EOF){
+	while (parser.getcurChar() != EOF && parser.getcurCmd()!="EOF") {
 		SingleVm2Asm();
 		parser.advance();
 	}
