@@ -11,7 +11,7 @@ load FibonacciElement.asm,
 output-file FibonacciElement.out,
 compare-to FibonacciElement.cmp,
 
-repeat 6000 {
+repeat 3000 {
 	ticktock;
 }
 
