@@ -56,7 +56,7 @@ Token Tokenizer::getID(){
 	if (Tok == "class" || Tok == "method" || Tok == "function" ||
 		Tok == "constructor" || Tok == "int" || Tok == "boolean" ||
 		Tok == "char" || Tok == "void" || Tok == "var" || 
-		Tok == "static" || Tok == "filed" || Tok == "do" || 
+		Tok == "static" || Tok == "field" || Tok == "do" || 
 		Tok == "if" || Tok == "else" || Tok == "while" || 
 		Tok == "return" || Tok == "true" || Tok == "false" || 
 		Tok == "null" || Tok == "this" || Tok == "let"){

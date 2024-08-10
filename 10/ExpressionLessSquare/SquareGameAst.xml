@@ -1,0 +1,8 @@
+<class>
+<keyword> class </keyword>
+<identifier> SquareGame </identifier>
+<symbol> { </symbol>
+<classVarDec>
+<keyword> field </keyword>
+Excepted a type like 'int' in compileClassVarDec
+Excepted '}' in compileClass

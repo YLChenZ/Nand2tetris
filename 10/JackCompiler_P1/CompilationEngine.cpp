@@ -102,8 +102,12 @@ void CompilationEngine::compileClassVarDec(){
 		out << "<keyword> " << tok.getCurToken().TokNm << " </keyword>"<<'\n';
 		tok.advance();
 	}
+	else if (tok.tokenType() == TokType::IDENTIFIER){
+		out << "<identifier> " << tok.getCurToken().TokNm << " </identifier>"<<'\n';
+		tok.advance();
+	}
 	else {
-		out << "Excepted a type like 'int' in compileClassVarDec"<<'\n';
+		out << "Excepted a type like 'int' or classname in compileClassVarDec"<<'\n';
 		return;
 	}
 	if (tok.tokenType() == TokType::IDENTIFIER){
@@ -703,12 +707,7 @@ void CompilationEngine::compileTerm(){
 	else if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == '('){
 		out << "<symbol> " << tok.symbol() << " </symbol>" <<'\n'; 
 		tok.advance();
-		if (isunaryOp()){
-			out << "<unaryOp> " << tok.symbol() << " </unaryOp>" <<'\n';
-			tok.advance();
-			compileTerm();
-		}
-		else compileExpression();
+		compileExpression();
 		if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == ')'){
 			out << "<symbol> " << tok.symbol() << " </symbol>" <<'\n';
 			tok.advance();
@@ -717,6 +716,11 @@ void CompilationEngine::compileTerm(){
 			out << "</term>" <<'\n';
 			return;
 		}
+	}
+	else if (isunaryOp()){
+		out << "<unaryOp> " << tok.symbol() << " </unaryOp>" <<'\n';
+		tok.advance();
+		compileTerm();
 	}
 	//else return;
 	
