@@ -239,18 +239,37 @@ Token Tokenizer::getCurToken(){
 	return curToken;
 }
 
+std::string Tokenizer::TransForXML(char c){
+	switch (c) {
+	case '>':
+		return "&gt;";
+		break;
+	case '<':
+		return "&lt;";
+		break;
+	case '"':
+		return "&quot;";
+		break;
+	case '&':
+		return "&amp;";
+		break;
+	default:
+		return std::string(1,c);
+	}
+}
+
 void Tokenizer::printSingleToken(){
 	TokType tt = tokenType();
 	if (tt == TokType::KEYWORD)
 		outfile << "<keyword> " << curToken.TokNm << " </keyword>"<<'\n';
 	if (tt == TokType::SYMBOL)
-		outfile << "<symbol> " << curToken.TokNm << " </symbol>"<<'\n';
+		outfile << "<symbol> " << TransForXML(curToken.TokNm[0]) << " </symbol>"<<'\n';
 	if (tt == TokType::IDENTIFIER)
 		outfile << "<identifier> " << curToken.TokNm << " </identifier>"<<'\n';
 	if (tt == TokType::INT_CONST)
 		outfile << "<integerConstant> " << curToken.TokNm << " </integerConstant>"<<'\n';
 	if (tt == TokType::STRING_CONST)
-		outfile << "<stringConstant> " << curToken.TokNm << " </stringConstant>"<<'\n';
+		outfile << "<stringConstant> " << stringVal() << " </stringConstant>"<<'\n';
 }
 
 void Tokenizer::printTokens(){

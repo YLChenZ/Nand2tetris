@@ -69,6 +69,8 @@ public:
 	
 	Token getCurToken();
 	
+	std::string TransForXML(char c);
+	
 	void printSingleToken();
 	
 	void printTokens();

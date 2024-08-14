@@ -252,7 +252,6 @@ void CompilationEngine::compileParameterList(){
 		else break;
 	}
 	if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == ')'){
-		out << "???????"<<'\n';
 		out << "</parameterList>"<<'\n';
 		out << "<symbol> " << tok.symbol() << " </symbol>"<<'\n';
 		tok.advance();
@@ -482,8 +481,8 @@ void CompilationEngine::compileIf(){
 			return;
 		}
 	}
-	else return;
 	out << "</ifStatement>"<<'\n';
+	return;
 }
 
 
@@ -533,7 +532,7 @@ void CompilationEngine::compileWhile(){
 }
 
 
-void CompilationEngine::compileDo(){  ////infinite loop? Why?
+void CompilationEngine::compileDo(){
 	out << "<doStatement>"<<'\n';
 	if (tok.keyWord() == DO){
 		out << "<keyword> " << tok.getCurToken().TokNm << " </keyword>"<<'\n';
@@ -625,7 +624,7 @@ void CompilationEngine::compileExpression(){
 	compileTerm();
 	while (true){
 		if (isOp()){
-			out << "<symbol> " << tok.symbol() << " </symbol>"<<'\n';
+			out << "<symbol> " << tok.TransForXML(tok.symbol()) << " </symbol>"<<'\n';
 			tok.advance();
 			compileTerm();
 		}
@@ -651,7 +650,7 @@ void CompilationEngine::compileTerm(){
 		tok.advance();
 	}
 	else if (isKwdConst()){
-		out << "<keywordConstant> " << tok.getCurToken().TokNm << " </keywordConstant>" <<'\n';
+		out << "<keyword> " << tok.getCurToken().TokNm << " </keyword>" <<'\n';
 		tok.advance();
 	}
 	else if (tok.tokenType() == TokType::IDENTIFIER){
@@ -718,7 +717,7 @@ void CompilationEngine::compileTerm(){
 		}
 	}
 	else if (isunaryOp()){
-		out << "<unaryOp> " << tok.symbol() << " </unaryOp>" <<'\n';
+		out << "<symbol> " << tok.symbol() << " </symbol>" <<'\n';
 		tok.advance();
 		compileTerm();
 	}

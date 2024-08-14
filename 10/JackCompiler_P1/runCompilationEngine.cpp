@@ -8,8 +8,10 @@ int main(int argc, char* argv[]) {
     }
 
     std::string filename = argv[1];
-    CompilationEngine CE(filename);
+    Tokenizer Tok(filename);
+	Tok.printTokens();
 	
+    CompilationEngine CE(filename);
 	CE.printXML();
 
     return 0;

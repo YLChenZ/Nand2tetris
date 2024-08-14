@@ -23,6 +23,7 @@ public:
 	bool isunaryOp();
 	bool isKwdConst();
 	
+	
 	void compileClass();
 	void compileClassVarDec();
 	void compileSubroutine();
