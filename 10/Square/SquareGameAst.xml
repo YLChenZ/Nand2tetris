@@ -74,7 +74,7 @@
 <keyword> return </keyword>
 <expression>
 <term> 
-<keywordConstant> this </keywordConstant>
+<keyword> this </keyword>
 </term>
 </expression>
 <symbol> ; </symbol>
@@ -114,7 +114,7 @@
 <expressionList>
 <expression>
 <term> 
-<keywordConstant> this </keywordConstant>
+<keyword> this </keyword>
 </term>
 </expression>
 </expressionList>
@@ -168,6 +168,7 @@
 </doStatement>
 </statements>
 <symbol> } </symbol>
+</ifStatement>
 <ifStatement>
 <keyword> if </keyword>
 <symbol> ( </symbol>
@@ -196,6 +197,7 @@
 </doStatement>
 </statements>
 <symbol> } </symbol>
+</ifStatement>
 <ifStatement>
 <keyword> if </keyword>
 <symbol> ( </symbol>
@@ -224,6 +226,7 @@
 </doStatement>
 </statements>
 <symbol> } </symbol>
+</ifStatement>
 <ifStatement>
 <keyword> if </keyword>
 <symbol> ( </symbol>
@@ -252,6 +255,7 @@
 </doStatement>
 </statements>
 <symbol> } </symbol>
+</ifStatement>
 <doStatement>
 <keyword> do </keyword>
 <identifier> Sys </identifier>
@@ -305,7 +309,7 @@
 <symbol> = </symbol>
 <expression>
 <term> 
-<keywordConstant> false </keywordConstant>
+<keyword> false </keyword>
 </term>
 </expression>
 <symbol> ; </symbol>
@@ -315,7 +319,7 @@
 <symbol> ( </symbol>
 <expression>
 <term> 
-<unaryOp> ~ </unaryOp>
+<symbol> ~ </symbol>
 <term> 
 <identifier> exit </identifier>
 </term>
@@ -389,13 +393,14 @@
 <symbol> = </symbol>
 <expression>
 <term> 
-<keywordConstant> true </keywordConstant>
+<keyword> true </keyword>
 </term>
 </expression>
 <symbol> ; </symbol>
 </letStatement>
 </statements>
 <symbol> } </symbol>
+</ifStatement>
 <ifStatement>
 <keyword> if </keyword>
 <symbol> ( </symbol>
@@ -424,6 +429,7 @@
 </doStatement>
 </statements>
 <symbol> } </symbol>
+</ifStatement>
 <ifStatement>
 <keyword> if </keyword>
 <symbol> ( </symbol>
@@ -452,6 +458,7 @@
 </doStatement>
 </statements>
 <symbol> } </symbol>
+</ifStatement>
 <ifStatement>
 <keyword> if </keyword>
 <symbol> ( </symbol>
@@ -480,6 +487,7 @@
 </letStatement>
 </statements>
 <symbol> } </symbol>
+</ifStatement>
 <ifStatement>
 <keyword> if </keyword>
 <symbol> ( </symbol>
@@ -508,6 +516,7 @@
 </letStatement>
 </statements>
 <symbol> } </symbol>
+</ifStatement>
 <ifStatement>
 <keyword> if </keyword>
 <symbol> ( </symbol>
@@ -536,6 +545,7 @@
 </letStatement>
 </statements>
 <symbol> } </symbol>
+</ifStatement>
 <ifStatement>
 <keyword> if </keyword>
 <symbol> ( </symbol>
@@ -564,12 +574,13 @@
 </letStatement>
 </statements>
 <symbol> } </symbol>
+</ifStatement>
 <whileStatement>
 <keyword> while </keyword>
 <symbol> ( </symbol>
 <expression>
 <term> 
-<unaryOp> ~ </unaryOp>
+<symbol> ~ </symbol>
 <term> 
 <symbol> ( </symbol>
 <expression>

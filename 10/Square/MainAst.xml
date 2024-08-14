@@ -108,7 +108,7 @@
 <symbol> ( </symbol>
 <expression>
 <term> 
-<keywordConstant> false </keywordConstant>
+<keyword> false </keyword>
 </term>
 </expression>
 <symbol> ) </symbol>
@@ -131,7 +131,7 @@
 <symbol> = </symbol>
 <expression>
 <term> 
-<keywordConstant> null </keywordConstant>
+<keyword> null </keyword>
 </term>
 </expression>
 <symbol> ; </symbol>
@@ -177,10 +177,14 @@
 <symbol> * </symbol>
 <term> 
 <symbol> ( </symbol>
-<unaryOp> - </unaryOp>
+<expression>
+<term> 
+<symbol> - </symbol>
 <term> 
 <identifier> j </identifier>
 </term>
+</term>
+</expression>
 <symbol> ) </symbol>
 </term>
 </expression>
@@ -197,10 +201,14 @@
 <symbol> / </symbol>
 <term> 
 <symbol> ( </symbol>
-<unaryOp> - </unaryOp>
+<expression>
+<term> 
+<symbol> - </symbol>
 <term> 
 <integerConstant> 2 </integerConstant>
 </term>
+</term>
+</expression>
 <symbol> ) </symbol>
 </term>
 </expression>

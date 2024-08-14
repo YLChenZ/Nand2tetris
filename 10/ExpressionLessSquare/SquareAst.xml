@@ -30,7 +30,6 @@
 <symbol> , </symbol>
 <keyword> int </keyword>
 <identifier> Asize </identifier>
-???????
 </parameterList>
 <symbol> ) </symbol>
 <subroutineBody>
@@ -111,7 +110,7 @@
 <expressionList>
 <expression>
 <term> 
-<keywordConstant> this </keywordConstant>
+<keyword> this </keyword>
 </term>
 </expression>
 </expressionList>
@@ -317,6 +316,7 @@
 </doStatement>
 </statements>
 <symbol> } </symbol>
+</ifStatement>
 <returnStatement>
 <keyword> return </keyword>
 <symbol> ; </symbol>
@@ -378,6 +378,7 @@
 </doStatement>
 </statements>
 <symbol> } </symbol>
+</ifStatement>
 <returnStatement>
 <keyword> return </keyword>
 <symbol> ; </symbol>
@@ -521,6 +522,7 @@
 </doStatement>
 </statements>
 <symbol> } </symbol>
+</ifStatement>
 <returnStatement>
 <keyword> return </keyword>
 <symbol> ; </symbol>
@@ -664,6 +666,7 @@
 </doStatement>
 </statements>
 <symbol> } </symbol>
+</ifStatement>
 <returnStatement>
 <keyword> return </keyword>
 <symbol> ; </symbol>
@@ -807,6 +810,7 @@
 </doStatement>
 </statements>
 <symbol> } </symbol>
+</ifStatement>
 <returnStatement>
 <keyword> return </keyword>
 <symbol> ; </symbol>
@@ -950,6 +954,7 @@
 </doStatement>
 </statements>
 <symbol> } </symbol>
+</ifStatement>
 <returnStatement>
 <keyword> return </keyword>
 <symbol> ; </symbol>
