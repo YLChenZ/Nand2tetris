@@ -147,7 +147,8 @@ void CompilationEngine::compileClassVarDec(){
 
 void CompilationEngine::compileSubroutine(){
 	SubroutineLevelSt.reset(); //reset SubroutineLevelSt;
-	
+	IfLabelIndex = 0;
+	WhileLabelIndex = 0;
 	FuncKind = tok.keyWord();
 	if (FuncKind == CONSTRUCTOR || FuncKind == FUNCTION || FuncKind == METHOD){
 		tok.advance();
@@ -174,7 +175,12 @@ void CompilationEngine::compileSubroutine(){
 	}
 	
 	compileParameterList();
+	
 	compileSubroutineBody();
+	auto Map = SubroutineLevelSt.getSTMap();
+	for (auto e : Map){
+		std::cout << e.first <<" "<< e.second.type << " " << e.second.index<<'\n';
+	}
 }
 
 
@@ -410,16 +416,40 @@ void CompilationEngine::compileLet(){
 		return;
 	}
 	if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == '['){//arr[i]
-		//push arr
-		vmw.writePush(Kind2Seg[v.kind],v.index);
 		tok.advance();
 		//push i
 		compileExpression();
+		//push arr
+		vmw.writePush(Kind2Seg[v.kind],v.index);
 		if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == ']'){
 			vmw.writeArithmetic(Command::ADD);  //add
-			vmw.writePop(Segment::POINTER,1);  //pop pointer 1 (that)
+			//vmw.writePop(Segment::POINTER,1);  //pop pointer 1 (that)
 			tok.advance();
 		}
+		if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == '='){
+			tok.advance();
+		}
+		else {
+			std::cout << "Excepted '=' in compileLet"<<'\n';
+			return;
+		}
+		compileExpression();
+		//pop temp 0
+		vmw.writePop(Segment::TEMP,0);
+		//pop pointer 1
+		vmw.writePop(Segment::POINTER,1);
+		//push temp 0
+		vmw.writePush(Segment::TEMP,0);
+		//pop that 0
+		vmw.writePop(Segment::THAT,0);
+		if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == ';'){
+			tok.advance();
+		}
+		else {
+			std::cout << "Excepted ';' in compileLet"<<'\n';
+			return;
+		}
+		return;
 	}
 	
 	if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == '='){
@@ -444,10 +474,9 @@ void CompilationEngine::compileLet(){
 
 
 void CompilationEngine::compileIf(){
-	std::string labelIf = funname + ".If";
-	std::string label1 = labelIf +std::to_string(IfLabelIndex);
-	IfLabelIndex++;
-	std::string label2 = labelIf +std::to_string(IfLabelIndex);
+	std::string label1 = "IF_TRUE" +std::to_string(IfLabelIndex);
+	std::string label2 = "IF_FALSE" +std::to_string(IfLabelIndex);
+	std::string label3 = "IF_END" +std::to_string(IfLabelIndex);
 	IfLabelIndex++;
 	if (tok.keyWord() == IF){
 		tok.advance();
@@ -468,7 +497,13 @@ void CompilationEngine::compileIf(){
 		return;
 	}
 	
-	vmw.writeArithmetic(Command::NOT); //not
+	//vmw.writeArithmetic(Command::NOT); //not
+	
+	//if-goto label1
+	vmw.writeIfGoto(label1);
+	
+	//goto label2
+	vmw.writeGoto(label2);
 	
 	if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == '{'){
 		tok.advance();
@@ -478,13 +513,9 @@ void CompilationEngine::compileIf(){
 		return;
 	}
 	
-	//if-goto label1
-	vmw.writeIfGoto(label1);///?
-	
+	//label1
+	vmw.writeLabel(label1);
 	compileStatements();
-	
-	//goto label2
-	vmw.writeGoto(label2);
 	
 	if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == '}'){
 		tok.advance();
@@ -494,6 +525,8 @@ void CompilationEngine::compileIf(){
 		return;
 	}
 	if (tok.keyWord() == ELSE){
+		//goto label3
+		vmw.writeGoto(label3);
 		tok.advance();
 		if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == '{'){
 			tok.advance();
@@ -502,32 +535,32 @@ void CompilationEngine::compileIf(){
 			std::cout << "Excepted '{'"<<'\n';
 			return;
 		}
-		//label1
-		vmw.writeLabel(label1);
+		//label2
+		vmw.writeLabel(label2);
 		compileStatements();
-	
+		
 		if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == '}'){
+			//goto label3
+			//vmw.writeGoto(label3);
 			tok.advance();
 		}
 		else {
 			std::cout << "Excepted '}'"<<'\n';
 			return;
 		}
-		//label2
-		vmw.writeLabel(label2);
-	}
-	else {
-		vmw.writeLabel(label1);
+		//label3
+		vmw.writeLabel(label3);
 		return;
 	}
+	//label2
+	vmw.writeLabel(label2);
+	return;
 }
 
 
 void CompilationEngine::compileWhile(){
-	std::string labelWhile = funname+".While";
-	std::string label1 = labelWhile + std::to_string(WhileLabelIndex);
-	WhileLabelIndex++;
-	std::string label2 = labelWhile + std::to_string(WhileLabelIndex);
+	std::string label1 = "WHILE_EXP" + std::to_string(WhileLabelIndex);
+	std::string label2 = "WHILE_END" + std::to_string(WhileLabelIndex);
 	WhileLabelIndex++;
 	if (tok.keyWord() == WHILE){
 		tok.advance();
@@ -583,6 +616,7 @@ void CompilationEngine::compileDo(){
 	}
 	compileTerm();
 	if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == ';'){
+		vmw.writePop(Segment::TEMP,0);
 		tok.advance();
 	}
 	else {
@@ -654,12 +688,13 @@ void CompilationEngine::compileTerm(){
 		vmw.writePush(Segment::CONSTANT,tok.intVal());
 		tok.advance();
 	}
-	else if (tok.tokenType() == TokType::STRING_CONST){  //type mismatch int and string?????
+	else if (tok.tokenType() == TokType::STRING_CONST){
 		auto str = tok.stringVal();
+		vmw.writePush(Segment::CONSTANT,str.size());
 		vmw.writeCall("String.new",1);
 		for (auto& c : str){
 			vmw.writePush(Segment::CONSTANT,static_cast<int>(c));
-			vmw.writeCall("String.appendChar",1);
+			vmw.writeCall("String.appendChar",2);
 		}
 		tok.advance();
 		return;
@@ -668,8 +703,8 @@ void CompilationEngine::compileTerm(){
 		if (tok.keyWord() == KNULL || tok.keyWord() == KFALSE)
 			vmw.writePush(Segment::CONSTANT,0);
 		else if (tok.keyWord() == KTRUE){
-			vmw.writePush(Segment::CONSTANT,1);
-			vmw.writeArithmetic(Command::NEG);
+			vmw.writePush(Segment::CONSTANT,0);
+			vmw.writeArithmetic(Command::NOT);
 		}
 		else if (tok.keyWord() == THIS)
 			vmw.writePush(Segment::POINTER,0);
@@ -684,23 +719,26 @@ void CompilationEngine::compileTerm(){
 				std::cout << varName <<" undefined!"<<'\n';
 				return;
 			}
-			vmw.writePush(Kind2Seg[v.kind],v.index);
-			
 			tok.advance();
 			compileExpression();
+			vmw.writePush(Kind2Seg[v.kind],v.index);
 			if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == ']'){
 				//arr+i
 				vmw.writeArithmetic(Command::ADD);
-				vmw.writePop(Segment::TEMP,0); //pop temp 0 for lhs exp
+				//pop pointer 1
+				vmw.writePop(Segment::POINTER,1);
+				//push that 0
+				vmw.writePush(Segment::THAT,0);
 				tok.advance();
 				return;
 			}
 		}
 		else if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == '('){ //FunName(explist)
 			tok.advance();
+			vmw.writePush(Segment::POINTER,0);
 			int args = compileExpressionList();
 			//call FunName
-			vmw.writeCall(varName,args);
+			vmw.writeCall(classname +"."+varName,args+1);
 			if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == ')'){
 				tok.advance();
 				return;
@@ -709,7 +747,7 @@ void CompilationEngine::compileTerm(){
 		}
 		else if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == '.'){//varName.FunName(explist)
 			tok.advance();
-			std::string fn;
+			std::string fn,totalname;
 			if (tok.tokenType() == TokType::IDENTIFIER){
 				fn = tok.getCurToken().TokNm;
 				tok.advance();
@@ -717,10 +755,19 @@ void CompilationEngine::compileTerm(){
 			if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == '('){
 				tok.advance();
 			}
-			std::string totalname = varName + "." + fn;
-			int args = compileExpressionList();
-			//call totalname
-			vmw.writeCall(totalname,args);
+			if (v.index == -1){
+				totalname = varName + "." + fn;
+				int args = compileExpressionList();
+				//call totalname
+				vmw.writeCall(totalname,args);
+			}
+			else {
+				totalname = v.type + "." + fn;
+				vmw.writePush(Kind2Seg[v.kind],v.index);
+				int args = compileExpressionList();
+				//call totalname
+				vmw.writeCall(totalname,args+1);
+			}
 			if (tok.tokenType() == TokType::SYMBOL && tok.symbol() == ')'){
 				tok.advance();
 				return;

@@ -40,11 +40,7 @@ private:
 	char curChar;
 	Token curToken;
 	
-	
-	
 	std::map<std::string,KWD> KWDMap;
-	
-	
 	
 	Token getID();
 	Token getNum();

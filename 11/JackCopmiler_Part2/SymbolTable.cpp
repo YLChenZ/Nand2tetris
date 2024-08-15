@@ -15,6 +15,9 @@ void SymTab::reset(){
 	VarIndex = 0;
 }
 
+std::map<Kind,std::string> Kind2Str{{Kind::STATIC,"static"},{Kind::FIELD,"field"},{Kind::ARG,"arg"},{Kind::VAR,"var"},
+{Kind::NONE,"none"}};
+
 void SymTab::add(const std::string& name,const std::string& type,Kind kind){
 	Value v = {type,kind,0};
 	if (kind == Kind::STATIC){
@@ -37,7 +40,7 @@ void SymTab::add(const std::string& name,const std::string& type,Kind kind){
 		STMap.emplace(name,v);
 		VarIndex++;
 	}
-	else std::cout << "Failed add"<<'\n';
+	//else std::cout << "Failed add "<<name<<" "<<type<<" "<<Kind2Str[kind]<<'\n';
 	
 }
 

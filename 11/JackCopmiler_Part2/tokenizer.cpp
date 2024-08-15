@@ -250,7 +250,7 @@ void Tokenizer::printSingleToken(){
 	if (tt == TokType::INT_CONST)
 		outfile << "<integerConstant> " << curToken.TokNm << " </integerConstant>"<<'\n';
 	if (tt == TokType::STRING_CONST)
-		outfile << "<stringConstant> " << curToken.TokNm << " </stringConstant>"<<'\n';
+		outfile << "<stringConstant> " << stringVal() << " </stringConstant>"<<'\n';
 }
 
 void Tokenizer::printTokens(){

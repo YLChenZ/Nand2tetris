@@ -14,7 +14,7 @@ VMWriter::VMWriter(const std::string& filename){
 	size_t commapos = filename.find('.');
 	std::string outfn;
 	if (commapos != std::string::npos)
-		outfn = filename.substr(0,commapos) + ".vm";
+		outfn = filename.substr(0,commapos) + "Test.vm";
 	outfs.open(outfn);
 	if (!outfs.is_open()) {
 		std::cerr << "Error opening file" << '\n';
@@ -44,7 +44,7 @@ void VMWriter::writeArithmetic(Command cmd){
 
 
 void VMWriter::writeLabel(const std::string& label){
-	outfs << "Label "<< label << ":" <<'\n';
+	outfs << "label "<< label <<'\n';
 }
 
 
