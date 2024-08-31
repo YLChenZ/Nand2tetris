@@ -14,6 +14,7 @@ CHIP DMux4Way {
     OUT a, b, c, d;
 
     PARTS:
+    /*
     Not(in=sel[0],out=not0);
     Not(in=sel[1],out=not1);
     And(a=not0, b=not1, out=t1);
@@ -24,4 +25,11 @@ CHIP DMux4Way {
     And(a=sel[1], b= sel[0], out=t4);
     And(a=in, b=t3, out=c);
     And(a=in, b=t4, out=d);
+    */
+    /*idea:
+    sel[1] is used to distinguish between {a,b} and {c,d}, while sel[0] is used to distinguish between a and b (c and d).
+    */
+    DMux(in=in, sel=sel[1], a=o1, b=o2);
+    DMux(in=o1, sel=sel[0], a=a, b=b);
+    DMux(in=o2, sel=sel[0], a=c, b=d);
 }
