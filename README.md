@@ -1,4 +1,4 @@
-# Computer-Assembler-VM-Compiler-OS
+# Nand2tetris
 这个项目包含：
 
 1.硬件架构设计与编译器开发
